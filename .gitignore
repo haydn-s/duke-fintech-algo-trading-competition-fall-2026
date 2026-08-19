@@ -1,0 +1,36 @@
+# Secrets. The .env file holds the IBKR paper account id and, if you automate
+# the gateway login, the password that opens a brokerage session. It must
+# never reach a remote. .env.example is the tracked template.
+.env
+.env.*
+!.env.example
+ibc/config.ini
+*.pem
+*.key
+
+# Price cache and shadow book. Regenerable, and parquet diffs are noise.
+# data/.gitkeep is kept so the directory survives a clone.
+data/*
+!data/.gitkeep
+
+# nav_history.csv is deliberately NOT ignored -- it is committed every day.
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
