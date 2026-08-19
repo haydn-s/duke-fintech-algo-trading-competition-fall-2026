@@ -73,3 +73,28 @@ orders every day.
 
 **Consequences.** Commission and slippage stop grinding down the numerator
 for exposure changes too small to matter.
+
+## 7. Credentials live in .env, not in the config file
+
+**Context.** `configs/live.yaml` is the control surface and is tracked, so it
+is the obvious place to put an account id and the wrong one. Meanwhile the
+repository had no `.gitignore` at all, so a single `git add .` would have
+committed the price cache and anything else lying around.
+
+**Decision.** Split by secrecy rather than by topic. Host, port, and client id
+stay in `configs/live.yaml`: they are not secret, and being able to read them
+in a diff is worth something. The paper account id -- and the login, if IBC is
+automating the gateway -- go in `.env`, which is gitignored, with `.env.example`
+tracked as the template. Environment variables win over the file so a systemd
+`EnvironmentFile=` needs no code change.
+
+**Consequences.** A twelve-line stdlib parser instead of a dependency, because
+a live run failing over a dotenv release's quote handling is not a trade worth
+making. `Credentials.__repr__` is redacted, since the object lands in
+tracebacks. Non-paper account ids are refused at startup: the competition is
+paper-only, and finding out at the first order is worse than finding out at
+import.
+
+**What would change it.** A secret manager already in the deployment, or a
+broker whose API actually authenticates rather than attaching to an
+authenticated session.

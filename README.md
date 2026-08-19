@@ -109,7 +109,9 @@ src/alphalab/
   shadow.py        out-of-sample tracking for unallocated sleeves
   backtest.py      replay a config over history, scored identically
   run.py           daily entrypoint
+  preflight.py     read-only check that the IBKR setup actually works
   config.py        typed loader; configs/live.yaml is the control surface
+  credentials.py   paper account id, read from an untracked .env
   data.py          daily bars with a local parquet cache
   strategies/      one file per idea
   brokers/         sim and IBKR behind one protocol
@@ -123,10 +125,24 @@ pip install -e ".[dev,live]"
 pytest
 ```
 
-Live trading needs IB Gateway running and authenticated (paper account,
-port 4002). Set `risk_free_annual_cmt_percent` in `configs/live.yaml` from
-the Treasury's published 3-month CMT rate on the competition's first day and
-then leave it alone -- it is fixed for the duration.
+Live trading needs IB Gateway running and authenticated against a paper
+account on port 4002. Full walkthrough in [docs/IBKR_SETUP.md](docs/IBKR_SETUP.md);
+the short version:
+
+```bash
+cp .env.example .env && chmod 600 .env   # set IBKR_ACCOUNT=DU...
+python -m alphalab.preflight             # read-only: can it connect and price?
+```
+
+`.env` holds the paper account id and is gitignored. Host, port, and client id
+are not secrets and live in `configs/live.yaml`. Nothing in this repository
+ever sees your IBKR password -- the Python API connects to a gateway that is
+already authenticated. Account ids that are not paper accounts (`DU`/`DF`) are
+refused at startup rather than at the first order.
+
+Set `risk_free_annual_cmt_percent` in `configs/live.yaml` from the Treasury's
+published 3-month CMT rate on the competition's first day and then leave it
+alone -- it is fixed for the duration.
 
 ```bash
 python -m alphalab.run --config configs/live.yaml --dry-run   # print orders only

@@ -19,6 +19,7 @@ import pandas as pd
 
 from . import data as data_mod
 from .config import Config
+from .credentials import Credentials
 from .engine import run_day
 from .score import score
 from .shadow import ShadowBook
@@ -69,13 +70,23 @@ def main() -> int:
     )
     config = Config.load(args.config)
     dry_run = args.dry_run or config.dry_run
+    credentials = Credentials.load()
 
     from .brokers.ibkr import IBKRBroker
+
+    LOG.info(
+        "account %s | %s | gateway %s:%d",
+        credentials.account,
+        "DRY RUN (read-only connection)" if dry_run else "LIVE ORDERS",
+        config.ibkr_host,
+        config.ibkr_port,
+    )
 
     with IBKRBroker(
         host=config.ibkr_host,
         port=config.ibkr_port,
         client_id=config.ibkr_client_id,
+        account=credentials.account,
         read_only=dry_run,
     ) as broker:
         prices = data_mod.update_cache(
