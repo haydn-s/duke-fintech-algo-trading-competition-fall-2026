@@ -1,0 +1,48 @@
+# The entire control surface. Editing this file is how you change what trades.
+#
+# Set this from the Treasury's published 3-month CMT rate on the competition's
+# first day. It is FIXED for the whole competition -- do not update it daily,
+# or your scorecard will stop matching the leaderboard.
+risk_free_annual_cmt_percent: 4.25
+
+# Realized annualized volatility the risk layer aims for. Low by design:
+# sigma_p is computed over the entire competition, so early volatility can
+# never be worked off.
+target_annual_vol: 0.08
+
+broker: ibkr
+dry_run: true  # flip to false only after a full dry-run day looks right
+
+ibkr:
+  host: 127.0.0.1
+  port: 4002       # IB Gateway paper. TWS paper is 7497.
+  client_id: 17
+
+no_trade_band: 0.005  # skip rebalances smaller than 0.5% of NAV
+
+risk_limits:
+  max_gross_exposure: 1.20
+  max_net_exposure: 1.00
+  max_position_weight: 0.15
+  max_drawdown: 0.12   # halts trading; requires a manual restart
+
+sleeves:
+  # Allocations are fractions of account capital and must sum to <= 1.0.
+  # Anything left over is cash, which is a position, not an absence of one.
+  - name: core
+    strategy: buy_and_hold
+    allocation: 0.40
+    params:
+      universe: [SPY, IEF, GLD, EFA]
+      gross: 1.0
+
+  # allocation: 0.0 means this sleeve trades nothing but is still marked
+  # daily into the shadow book. Promote it only on out-of-sample evidence.
+  - name: mom_shadow
+    strategy: xsec_momentum
+    allocation: 0.0
+    params:
+      universe: [SPY, QQQ, IWM, EFA, EEM, TLT, GLD, XLE]
+      lookback: 126
+      skip: 5
+      n_long: 2
